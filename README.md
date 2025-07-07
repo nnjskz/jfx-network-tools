@@ -1,37 +1,69 @@
-# jfx-network-tools
+# 🛠️ JFX Network Tools
 
-#### 介绍
-jfx-network-tools 是一个基于 JavaFX 的轻量级网络调试工具，支持 TCP/UDP 客户端与服务端模式，具备自动应答、连接历史、日志保存等实用功能。界面简洁，操作直观，适合网络协议调试、教育演示与快速开发使用。
+&#x20;&#x20;
 
-#### 软件架构
-软件架构说明
+**JFX Network Tools** 是一款轻量、简易、跨平台的 JavaFX 网络调试工具，支持 TCP/UDP 客户端与服务端模式。界面清晰，适用于网络协议调试、IoT 设备测试、教学演示、快速原型开发等场景。
 
+---
 
-#### 安装教程
+## ⭐ 功能亮点
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+| 功能                      | 说明                          |
+|-------------------------|-----------------------------|
+| ✅ **TCP/UDP 客户端 & 服务端** | 双模式支持，便捷切换                  |
+| 🔄 **自动应答**             | 适合模拟服务器（固定响应，后续考虑开发自定义响应内容） |
+| 📜 **连接历史记录**           | 快速复用历史配置                    |
+| 🗄 **日志保存**             | 支持将数据保存为日志，方便预览、分析          |
+| 🌙 **深色/浅色主题**          | 自动切换，兼容操作系统                 |
+| 🗂 **定时发送**             | 支持一键定时发送，模拟心跳数据             |
 
-#### 使用说明
+---
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 📸 软件截图
+### ☀️浅色主题
+<img src="docs/img/light01.png" width="250" alt="">
+<img src="docs/img/light02.png" width="250" alt="">
+<img src="docs/img/light03.png" width="250" alt="">
+<img src="docs/img/light04.png" width="250" alt="">
+<img src="docs/img/light05.png" width="250" alt="">
 
-#### 参与贡献
+### 🌛深色主题
+<img src="docs/img/night01.png" width="250" alt="">
+<img src="docs/img/night02.png" width="250" alt="">
+<img src="docs/img/night03.png" width="250" alt="">
+<img src="docs/img/night04.png" width="250" alt="">
+<img src="docs/img/night05.png" width="250" alt="">
+---
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+## 🚀 安装与使用
 
+### 1. 开发环境要求
 
-#### 特技
+- Java 17+
+- JavaFX 17.0.6（已集成）
+- 本地根据Maven Profiles启动
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+## 📁 数据文件存储
+
+✅ 应用会自动创建数据文件于用户目录下：
+
+- macOS: `~/Library/Application Support/JFXNetworkTools/`
+- Windows: `%LOCALAPPDATA%\JFXNetworkTools\`
+
+数据目录不会随 `.app` 删除，支持持久配置与历史记录。
+
+---
+
+## 🤝 开源协议
+
+本项目采用 **MIT License**，详见 [LICENSE](./LICENSE)。 欢迎提交 **Issue、建议或 bug 报告**，共建更好网络调试工具！
+
+---
+
+## 📦 贡献与支持
+
+- 🌱 欢迎提出功能建议
+- 🐛 Bug 报告请附完整日志与复现步骤
+
+---
+

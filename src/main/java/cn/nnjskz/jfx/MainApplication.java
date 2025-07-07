@@ -138,7 +138,6 @@ public class MainApplication extends Application {
     private void dynamicUserAgentStylesheet() {
         Runnable themeSwitcher = () -> {
             boolean darkMode = isSystemInDarkMode();
-//            boolean darkMode = true;
             Platform.runLater(() -> {
                 if (darkMode) {
                     Application.setUserAgentStylesheet(new CupertinoDark().getUserAgentStylesheet());

@@ -1,36 +1,71 @@
-# jfx-network-tools
+# 🛠️ JFX Network Tools
 
-#### Description
-jfx-network-tools 是一个基于 JavaFX 的轻量级网络调试工具，支持 TCP/UDP 客户端与服务端模式，具备自动应答、连接历史、日志保存等实用功能。界面简洁，操作直观，适合网络协议调试、教育演示与快速开发使用。
+**JFX Network Tools** is a lightweight, easy-to-use, cross-platform network debugging tool built with JavaFX. It supports both TCP/UDP client and server modes. The interface is clean and intuitive, making it ideal for protocol debugging, IoT device testing, educational demos, and rapid prototyping.
 
-#### Software Architecture
-Software architecture description
+---
 
-#### Installation
+## ⭐ Features
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+| Feature                        | Description                                                 |
+|-------------------------------|-------------------------------------------------------------|
+| ✅ **TCP/UDP Client & Server** | Dual-mode support, easy to switch between modes             |
+| 🔄 **Auto Response**           | Suitable for simulation servers (fixed response, consider developing custom response content later) |
+| 📜 **Connection History**       | Quickly reuse previously connected configurations           |
+| 🗄 **Log Saving**              | Support saving data as logs for easy preview and analysis  |
+| 🌙 **Dark/Light Theme**        | Auto theme switching with OS compatibility                  |
+| 🗂 **Scheduled Send**          | Support one-key scheduled sending, simulate heartbeat data    |
 
-#### Instructions
+---
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## 📸 Screenshots
 
-#### Contribution
+### ☀️ Light Theme
+<img src="docs/img/light01.png" width="250" alt="">
+<img src="docs/img/light02.png" width="250" alt="">
+<img src="docs/img/light03.png" width="250" alt="">
+<img src="docs/img/light04.png" width="250" alt="">
+<img src="docs/img/light05.png" width="250" alt="">
 
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
+### 🌛 Dark Theme
+<img src="docs/img/night01.png" width="250" alt="">
+<img src="docs/img/night02.png" width="250" alt="">
+<img src="docs/img/night03.png" width="250" alt="">
+<img src="docs/img/night04.png" width="250" alt="">
+<img src="docs/img/night05.png" width="250" alt="">
 
+---
 
-#### Gitee Feature
+## 🚀 Installation & Usage
 
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+### 1. Development Requirements
+
+- Java 17+
+- JavaFX 17.0.6 (bundled)
+- Use Maven profiles to start the app locally
+
+---
+
+## 📁 Data Storage
+
+✅ The application automatically creates a data folder in the user directory:
+
+- macOS: `~/Library/Application Support/JFXNetworkTools/`
+- Windows: `%LOCALAPPDATA%\JFXNetworkTools\`
+
+This folder is persistent and won't be deleted when uninstalling the app.
+
+---
+
+## 🤝 License
+
+This project is licensed under the **MIT License**. See [LICENSE](./LICENSE) for details. Feel free to submit **issues, suggestions, or bug reports** to help us improve!
+
+---
+
+## 📦 Contributions
+
+- 🌱 Feature requests are welcome
+- 🐛 Please include logs and steps when reporting bugs
+
+---
+
