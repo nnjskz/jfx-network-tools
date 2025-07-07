@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="cn.nnjskz.jfx.controller.MainController">
+
+    <!-- 顶部参数配置区域 -->
+    <top>
+        <HBox alignment="CENTER" spacing="5.0">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10"/>
+            </padding>
+            <children>
+                <Label prefHeight="30.0" prefWidth="42.0" text="模式："/>
+                <ComboBox fx:id="modeCombo" prefWidth="120"/>
+
+                <Label prefHeight="30.0" prefWidth="45.0" text="地址："/>
+                <TextField fx:id="ipField" prefHeight="30.0" prefWidth="140.0" promptText="IP/域名"/>
+
+                <Label prefHeight="30.0" prefWidth="5.0" text=":"/>
+                <TextField fx:id="portField" prefHeight="30.0" prefWidth="68.0" promptText="端口"/>
+                <Button fx:id="connHistoryBtn" mnemonicParsing="false" onAction="#openConnectHistory" text="连接历史">
+                    <cursor>
+                        <Cursor fx:constant="HAND"/>
+                    </cursor>
+                    <graphic>
+                        <FontIcon iconLiteral="anto-history"/>
+                    </graphic>
+                </Button>
+
+                <Button fx:id="connectBtn" disable="true" onAction="#onConnect" text="连接">
+                    <cursor>
+                        <Cursor fx:constant="HAND"/>
+                    </cursor>
+                    <graphic>
+                        <FontIcon iconLiteral="anto-link"/>
+                    </graphic>
+                </Button>
+                <Button fx:id="disconnectBtn" disable="true" onAction="#onHandDisconnect" text="断开">
+                    <cursor>
+                        <Cursor fx:constant="HAND"/>
+                    </cursor>
+                    <graphic>
+                        <FontIcon iconLiteral="anto-disconnect"/>
+                    </graphic>
+                </Button>
+            </children>
+        </HBox>
+    </top>
+    <center>
+        <SplitPane>
+            <items>
+                <VBox spacing="5">
+                    <padding>
+                        <Insets bottom="10" left="10" right="10" top="10"/>
+                    </padding>
+                    <children>
+                        <!-- 接收区域 -->
+                        <Label prefHeight="30.0" text="接收内容&lt;&lt;"/>
+                        <TextArea fx:id="chatArea"
+                                  editable="false" wrapText="true" minHeight="500.0"
+                                  style="
+                                        -fx-background-insets: 0;
+                                        -fx-background-color: transparent, transparent, transparent, transparent;
+                                        -fx-border-color: transparent;
+                                        -fx-focus-color: transparent;
+                                        -fx-text-box-border: transparent;
+                        "/>
+                        <HBox alignment="CENTER_RIGHT" prefHeight="40.0" prefWidth="756.0" spacing="5.0">
+                            <children>
+                                <CheckBox fx:id="hexRecvCheck" prefHeight="30.0" prefWidth="83.0" text="HEX显示">
+                                    <cursor>
+                                        <Cursor fx:constant="HAND"/>
+                                    </cursor>
+                                </CheckBox>
+                                <Button fx:id="clearRecvBtn" disable="true" onAction="#onClearRecv" text="清空">
+                                    <cursor>
+                                        <Cursor fx:constant="HAND"/>
+                                    </cursor>
+                                    <graphic>
+                                        <FontIcon iconLiteral="anto-clear"/>
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="saveLogBtn" disable="true" onAction="#onSaveLog" text="保存日志">
+                                    <cursor>
+                                        <Cursor fx:constant="HAND"/>
+                                    </cursor>
+                                    <graphic>
+                                        <FontIcon iconLiteral="anto-save"/>
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="historyLogBtn" onAction="#onHistoryLogs" text="历史日志">
+                                    <cursor>
+                                        <Cursor fx:constant="HAND"/>
+                                    </cursor>
+                                    <graphic>
+                                        <FontIcon iconLiteral="anto-file-search"/>
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </HBox>
+                        <HBox fx:id="sendHBox" prefHeight="30.0" prefWidth="756.0">
+                            <children>
+                                <!-- 发送区域 -->
+                                <Label prefHeight="30.0" text="发送内容&gt;&gt;"/>
+                            </children>
+                        </HBox>
+                        <TextArea fx:id="sendArea" minHeight="120.0" prefHeight="120.0" prefWidth="605.0"
+                                  wrapText="true"/>
+                        <VBox spacing="5">
+                            <padding>
+                                <Insets bottom="10" left="10" right="10" top="10"/>
+                            </padding>
+                            <children>
+                                <HBox alignment="CENTER_RIGHT" spacing="5.0">
+                                    <children>
+                                        <CheckBox fx:id="autoAnswerCheck" prefHeight="30.0" prefWidth="84.0"
+                                                  text="自动应答">
+                                            <cursor>
+                                                <Cursor fx:constant="HAND"/>
+                                            </cursor>
+                                        </CheckBox>
+                                        <CheckBox fx:id="hexSendCheck" prefHeight="30.0" prefWidth="83.0"
+                                                  text="HEX发送">
+                                            <cursor>
+                                                <Cursor fx:constant="HAND"/>
+                                            </cursor>
+                                        </CheckBox>
+                                        <CheckBox fx:id="autoSendCheck" prefHeight="30.0" prefWidth="84.0"
+                                                  text="定时发送">
+                                            <cursor>
+                                                <Cursor fx:constant="HAND"/>
+                                            </cursor>
+                                        </CheckBox>
+                                        <TextField fx:id="sendIntervalField" prefWidth="80" promptText="间隔(ms)"
+                                                   text="1000"/>
+                                        <Button fx:id="sendBtn" disable="true" onAction="#onSend" text="发送">
+                                            <cursor>
+                                                <Cursor fx:constant="HAND"/>
+                                            </cursor>
+                                            <graphic>
+                                                <FontIcon iconLiteral="anto-send"/>
+                                            </graphic>
+                                        </Button>
+                                        <Button fx:id="sendStopBtn" disable="true" onAction="#onStopSend" text="停止">
+                                            <cursor>
+                                                <Cursor fx:constant="HAND"/>
+                                            </cursor>
+                                            <graphic>
+                                                <FontIcon iconLiteral="anto-pause"/>
+                                            </graphic>
+                                        </Button>
+                                        <Button fx:id="clearSendBtn" onAction="#onClearSend" text="清空">
+                                            <cursor>
+                                                <Cursor fx:constant="HAND"/>
+                                            </cursor>
+                                            <graphic>
+                                                <FontIcon iconLiteral="anto-clear"/>
+                                            </graphic>
+                                        </Button>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </children>
+                </VBox>
+            </items>
+        </SplitPane>
+    </center>
+
+    <!-- 底部状态栏 -->
+    <bottom>
+        <HBox spacing="10">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10"/>
+            </padding>
+            <children>
+                <Label fx:id="statusLabel" text="未连接"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="clientNumLabel" text="客户端数量：0" visible="false"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="byteCountLabel" text="收：0字节  发：0字节"/>
+            </children>
+        </HBox>
+    </bottom>
+
+</BorderPane>

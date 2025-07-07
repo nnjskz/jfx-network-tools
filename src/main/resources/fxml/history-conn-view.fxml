@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="289.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.nnjskz.jfx.controller.HistoryConnController">
+   <center>
+      <TableView fx:id="historyConnTable" prefHeight="378.0" prefWidth="566.0" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="ip" prefWidth="150.0" text="IP/域名" />
+          <TableColumn fx:id="port" minWidth="0.0" prefWidth="70.0" text="端口" />
+            <TableColumn fx:id="action" minWidth="0.0" prefWidth="67.0" text="操作" />
+        </columns>
+      </TableView>
+   </center>
+</BorderPane>

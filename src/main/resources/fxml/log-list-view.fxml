@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="822.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.nnjskz.jfx.controller.HistoryLogsController">
+   <top>
+        <TableView fx:id="historyLogsTable" BorderPane.alignment="CENTER">
+            <columns>
+                <TableColumn fx:id="logSeq" prefWidth="50.0" text="序号" />
+                <TableColumn fx:id="logName" prefWidth="360.0" text="名称" />
+                <TableColumn fx:id="logSize" minWidth="0.0" prefWidth="120.0" text="大小(字节)" />
+                <TableColumn fx:id="action" minWidth="0.0" prefWidth="280.0" text="操作" />
+            </columns>
+        </TableView>
+   </top>
+</BorderPane>
