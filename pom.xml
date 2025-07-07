@@ -107,10 +107,8 @@
                     <noManPages>true</noManPages>
                     <noHeaderFiles>true</noHeaderFiles>
                     <compress>2</compress>
-                    <jlinkImageName>${project.artifactId}-runtime</jlinkImageName>
-<!--                    <addModules>-->
-<!--                        javafx.controls,javafx.fxml-->
-<!--                    </addModules>-->
+                    <jlinkImageName>${project.artifactId}</jlinkImageName>
+                    <jlinkZipName>${project.artifactId}</jlinkZipName>
                 </configuration>
             </plugin>
             <plugin>

@@ -2,7 +2,7 @@
 
 &#x20;&#x20;
 
-**JFX Network Tools** 是一款轻量、简易、跨平台的 JavaFX 网络调试工具，支持 TCP/UDP 客户端与服务端模式。界面清晰，适用于网络协议调试、IoT 设备测试、教学演示、快速原型开发等场景。
+**JFX Network Tools** 是一款macOS端的网络调试工具（基于JavaFX），支持 TCP/UDP 客户端与服务端模式。界面清晰，适用于网络协议调试、IoT 设备测试、教学演示、快速原型开发等场景。
 
 ---
 
@@ -48,7 +48,6 @@
 ✅ 应用会自动创建数据文件于用户目录下：
 
 - macOS: `~/Library/Application Support/JFXNetworkTools/`
-- Windows: `%LOCALAPPDATA%\JFXNetworkTools\`
 
 数据目录不会随 `.app` 删除，支持持久配置与历史记录。
 

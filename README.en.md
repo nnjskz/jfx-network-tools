@@ -1,6 +1,6 @@
 # 🛠️ JFX Network Tools
 
-**JFX Network Tools** is a lightweight, easy-to-use, cross-platform network debugging tool built with JavaFX. It supports both TCP/UDP client and server modes. The interface is clean and intuitive, making it ideal for protocol debugging, IoT device testing, educational demos, and rapid prototyping.
+**JFX Network Tools** is a network debugging tool for macOS (based on JavaFX), supporting TCP/UDP client and server modes. It has a clear interface and is suitable for scenarios such as network protocol debugging, IoT device testing, teaching demonstrations, and rapid prototyping.
 
 ---
 
