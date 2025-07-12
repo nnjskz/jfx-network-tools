@@ -21,6 +21,7 @@
 
 ## 📸 软件截图
 ### ☀️浅色主题
+<div>
 <img src="docs/img/v1.1/light01.png" width="250" alt="">
 <img src="docs/img/v1.1/light02.png" width="250" alt="">
 <img src="docs/img/v1.1/light03.png" width="250" alt="">
@@ -28,8 +29,11 @@
 <img src="docs/img/v1.1/light05.png" width="250" alt="">
 <img src="docs/img/v1.1/light06.png" width="250" alt="">
 <img src="docs/img/v1.1/light07.png" width="250" alt="">
+</div>
+
 
 ### 🌛深色主题
+<div>
 <img src="docs/img/v1.1/night01.png" width="250" alt="">
 <img src="docs/img/v1.1/night02.png" width="250" alt="">
 <img src="docs/img/v1.1/night03.png" width="250" alt="">
@@ -37,6 +41,8 @@
 <img src="docs/img/v1.1/night05.png" width="250" alt="">
 <img src="docs/img/v1.1/night06.png" width="250" alt="">
 <img src="docs/img/v1.1/night07.png" width="250" alt="">
+</div>
+
 ---
 
 ## 🚀 安装与使用

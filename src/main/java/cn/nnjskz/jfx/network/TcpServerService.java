@@ -18,15 +18,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class TcpServerService {
     private final Integer port;
     private ServerSocket serverSocket;
     private final Map<Socket, OutputStream> writersMap = new ConcurrentHashMap<>();
-//    private final ExecutorService threadPool = Executors.newCachedThreadPool();
     private Consumer<Map<Socket, byte[]>> receive;
     private Consumer<String> infoCall;
     private Runnable onDisconnect;
