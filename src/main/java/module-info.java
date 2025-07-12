@@ -5,16 +5,17 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-module cn.nnjskz.jfx.jfxnetworktools {
-    requires javafx.fxml;
-    requires javafx.controls;
-
+module jfx.network.tools.nnjskz {
     requires atlantafx.base;
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.antdesignicons;
     requires com.alibaba.fastjson2;
     requires java.desktop;
-    requires org.kordamp.ikonli.core;
+    requires org.fxmisc.richtext;
+    requires javafx.fxml;
+    requires org.fxmisc.undo;
+    requires wellbehavedfx;
+
 
     opens cn.nnjskz.jfx to javafx.fxml;
     exports cn.nnjskz.jfx;

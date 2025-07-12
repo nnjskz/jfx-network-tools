@@ -21,18 +21,22 @@
 
 ## 📸 软件截图
 ### ☀️浅色主题
-<img src="docs/img/light01.png" width="250" alt="">
-<img src="docs/img/light02.png" width="250" alt="">
-<img src="docs/img/light03.png" width="250" alt="">
-<img src="docs/img/light04.png" width="250" alt="">
-<img src="docs/img/light05.png" width="250" alt="">
+<img src="docs/img/v1.1/light01.png" width="250" alt="">
+<img src="docs/img/v1.1/light02.png" width="250" alt="">
+<img src="docs/img/v1.1/light03.png" width="250" alt="">
+<img src="docs/img/v1.1/light04.png" width="250" alt="">
+<img src="docs/img/v1.1/light05.png" width="250" alt="">
+<img src="docs/img/v1.1/light06.png" width="250" alt="">
+<img src="docs/img/v1.1/light07.png" width="250" alt="">
 
 ### 🌛深色主题
-<img src="docs/img/night01.png" width="250" alt="">
-<img src="docs/img/night02.png" width="250" alt="">
-<img src="docs/img/night03.png" width="250" alt="">
-<img src="docs/img/night04.png" width="250" alt="">
-<img src="docs/img/night05.png" width="250" alt="">
+<img src="docs/img/v1.1/night01.png" width="250" alt="">
+<img src="docs/img/v1.1/night02.png" width="250" alt="">
+<img src="docs/img/v1.1/night03.png" width="250" alt="">
+<img src="docs/img/v1.1/night04.png" width="250" alt="">
+<img src="docs/img/v1.1/night05.png" width="250" alt="">
+<img src="docs/img/v1.1/night06.png" width="250" alt="">
+<img src="docs/img/v1.1/night07.png" width="250" alt="">
 ---
 
 ## 🚀 安装与使用
@@ -43,9 +47,23 @@
 - JavaFX 17.0.6（已集成）
 - 本地根据Maven Profiles启动
 
+### 2.关于jlink模块化打包
+本项目使用了 RichTextFX 组件库。由于该库默认未提供模块化（即没有 module-info.java），
+为实现基于 jlink 的模块化打包，我们手动为其以及相关依赖（如 Flowless、UndoFX、ReactFX、WellBehavedFX）补充了 module-info 并打包为模块化 JAR。
+
+操作步骤详见 `/build-modular/richtextfx` 目录，具体包括：
+
+1. 解压 JavaFX SDK（根据你的操作系统下载对应的sdk）；
+2. 运行 `build.sh` 脚本自动完成依赖模块化并安装至本地 Maven 仓库；
+3. 即可使用jlink生成可运行镜像。
+
+该过程仅需本地一次性执行，打包后的模块已支持 jlink 运行时构建。
+
+---
+
 ## 📁 数据文件存储
 
-✅ 应用会自动创建数据文件于用户目录下：
+✅ 应用会自动创建数据、日志文件于用户目录下：
 
 - macOS: `~/Library/Application Support/JFXNetworkTools/`
 
@@ -58,11 +76,13 @@
 本项目采用 **MIT License**，详见 [LICENSE](./LICENSE)。 欢迎提交 **Issue、建议或 bug 报告**，共建更好网络调试工具！
 
 ---
-
+## 🙏 致谢
+- [RichTextFX](https://github.com/FXMisc/RichTextFX)（BSD-2-Clause License）
+- [AtlantaFX](https://github.com/mkpaz/atlantafx)（MIT License）
+---
 ## 📦 贡献与支持
 
 - 🌱 欢迎提出功能建议
 - 🐛 Bug 报告请附完整日志与复现步骤
 
 ---
-

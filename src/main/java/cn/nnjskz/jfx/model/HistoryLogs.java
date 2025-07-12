@@ -14,11 +14,13 @@ public class HistoryLogs {
     private Integer logSeq;
     private String logName;
     private Long logSize;
+    private String logTime;
 
-    public HistoryLogs(Integer logSeq, String logName, Long logSize) {
+    public HistoryLogs(Integer logSeq, String logName, Long logSize, String logTime) {
         this.logSeq = logSeq;
         this.logName = logName;
         this.logSize = logSize;
+        this.logTime = logTime;
     }
 
     public HistoryLogs() {
@@ -46,5 +48,13 @@ public class HistoryLogs {
 
     public void setLogSeq(Integer logSeq) {
         this.logSeq = logSeq;
+    }
+
+    public String getLogTime() {
+        return logTime;
+    }
+
+    public void setLogTime(String logTime) {
+        this.logTime = logTime;
     }
 }

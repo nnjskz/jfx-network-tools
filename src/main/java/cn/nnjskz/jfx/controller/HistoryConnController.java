@@ -30,7 +30,7 @@ public class HistoryConnController {
     @FXML
     private TableView<HistoryConn> historyConnTable;
     @FXML
-    private TableColumn<HistoryConn, String> ip;
+    private TableColumn<HistoryConn, String> host;
     @FXML
     private TableColumn<HistoryConn, Integer> port;
     @FXML
@@ -49,7 +49,7 @@ public class HistoryConnController {
 
 
         if (!connHistoryList.isEmpty()) {
-            ip.setCellValueFactory(new PropertyValueFactory<>("ip"));
+            host.setCellValueFactory(new PropertyValueFactory<>("host"));
             port.setCellValueFactory(new PropertyValueFactory<>("port"));
             historyConnTable.setItems(FXCollections.observableList(connHistoryList));
             action.setCellFactory(col -> new TableCell<>(){

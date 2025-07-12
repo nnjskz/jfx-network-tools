@@ -64,5 +64,6 @@ public class UdpService {
 
     public void close(){
         socket.close();
+        receive = null;
     }
 }

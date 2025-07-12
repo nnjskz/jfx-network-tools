@@ -18,12 +18,14 @@ public class AppExecutors {
     private static final int CPU_CORES = Runtime.getRuntime().availableProcessors();
     private static final int IO_BOUND_THREAD_COUNT = CPU_CORES * 2;
     // 后台线程
-    private final ExecutorService backgroundExecutor;
-    // 用定时线程
+    private final ExecutorService backgroundCachedExecutor;
+    private final ExecutorService backgroundFixedExecutor;
+    // 定时线程
     private final ScheduledExecutorService scheduledTaskExecutor;
 
     private AppExecutors() {
-        backgroundExecutor = Executors.newFixedThreadPool(IO_BOUND_THREAD_COUNT);
+        backgroundCachedExecutor =Executors.newCachedThreadPool();
+        backgroundFixedExecutor = Executors.newFixedThreadPool(IO_BOUND_THREAD_COUNT);
         scheduledTaskExecutor = Executors.newSingleThreadScheduledExecutor();
     }
 
@@ -43,11 +45,19 @@ public class AppExecutors {
     }
 
     /**
-     * 获取用于后台和非调度任务的 ExecutorService
+     * 获取用于后台任务的 ExecutorService
      * @return ExecutorService
      */
-    public ExecutorService getBackgroundExecutor() {
-        return backgroundExecutor;
+    public ExecutorService getBackgroundCachedExecutor() {
+        return backgroundCachedExecutor;
+    }
+
+    /**
+     * 获取用于后台任务的 ExecutorService
+     * @return ExecutorService
+     */
+    public ExecutorService getBackgroundFixedExecutor() {
+        return backgroundFixedExecutor;
     }
 
     /**
@@ -62,36 +72,27 @@ public class AppExecutors {
      * 关闭所有管理的线程池。
      */
     public void shutdown() {
-        System.out.println("Shutting down AppExecutors...");
-        // 关闭backgroundExecutor
-        if (!backgroundExecutor.isShutdown()) {
-            backgroundExecutor.shutdown();
+        shutdownExecutor(backgroundFixedExecutor);
+        shutdownExecutor(backgroundCachedExecutor);
+        shutdownExecutor(scheduledTaskExecutor);
+    }
+
+    /**
+     * 关闭指定线程池。
+     * @param executor 线程池
+     */
+    private void shutdownExecutor(ExecutorService executor) {
+        if (!executor.isShutdown()) {
+            executor.shutdown();
             try {
-                // 等待所有任务完成，最长等待5秒
-                if (!backgroundExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    // 如果超时，则强制关闭
-                    backgroundExecutor.shutdownNow();
-                    System.err.println("Background IO Executor did not terminate in time, forced shutdown.");
+                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    // 强制关闭
+                    executor.shutdownNow();
                 }
             } catch (InterruptedException e) {
-                backgroundExecutor.shutdownNow(); // 线程中断，强制关闭
-                Thread.currentThread().interrupt(); // 恢复中断状态
-                System.err.println("Background IO Executor shutdown interrupted.");
-            }
-        }
-        //关闭scheduledTaskExecutor
-        if (!scheduledTaskExecutor.isShutdown()) {
-            scheduledTaskExecutor.shutdownNow();
-            try {
-                if (!scheduledTaskExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    System.err.println("Scheduled Task Executor did not terminate in time, forced shutdown.");
-                }
-            } catch (InterruptedException e) {
-                scheduledTaskExecutor.shutdownNow();
+                executor.shutdownNow();
                 Thread.currentThread().interrupt();
-                System.err.println("Scheduled Task Executor shutdown interrupted.");
             }
         }
-        System.out.println("AppExecutors shut down complete.");
     }
 }

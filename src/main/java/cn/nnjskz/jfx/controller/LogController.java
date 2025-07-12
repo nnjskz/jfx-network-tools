@@ -7,16 +7,24 @@
  */
 package cn.nnjskz.jfx.controller;
 
+import cn.nnjskz.jfx.utils.ThemeManager;
 import javafx.fxml.FXML;
-import javafx.scene.control.TextArea;
+import org.fxmisc.richtext.InlineCssTextArea;
 
 public class LogController {
     @FXML
-    private TextArea logContent;
+    private InlineCssTextArea logContent;
+
 
     public void setContent(StringBuilder content) {
         if (logContent != null) {
-            logContent.setText(content.toString());
+            String textColor = ThemeManager.isDarkMode() ? "#fbfbfb" : "#1c1c1e";
+            logContent.append(content.toString(),"-fx-fill: " + textColor);
         }
+    }
+
+    public void onClose(){
+        logContent.clear();
+        logContent.replaceText("");
     }
 }

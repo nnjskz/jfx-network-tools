@@ -70,4 +70,19 @@ public class DateUtil {
         LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
         return ldt.format(dtf);
     }
+
+    /**
+     * 4、根据时间戳格式化输出指定时间格式
+     *
+     * @param timestamp 时间戳（毫秒）
+     * @param pattern   格式化后的格式
+     * @return 格式化后的时间字符串
+     */
+    public static String formatDate2String(long timestamp, String pattern) {
+        String fmt = (pattern != null && !pattern.isEmpty()) ? pattern : COMMON_PATTERN;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(fmt);
+        Instant instant = Instant.ofEpochMilli(timestamp);
+        LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        return ldt.format(dtf);
+    }
 }

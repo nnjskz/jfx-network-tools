@@ -11,9 +11,7 @@ import cn.nnjskz.jfx.MainApplication;
 import cn.nnjskz.jfx.network.TcpClientService;
 import cn.nnjskz.jfx.network.TcpServerService;
 import cn.nnjskz.jfx.network.UdpService;
-import cn.nnjskz.jfx.utils.AppExecutors;
-import cn.nnjskz.jfx.utils.DateUtil;
-import cn.nnjskz.jfx.utils.FileUtil;
+import cn.nnjskz.jfx.utils.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -22,6 +20,8 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import org.fxmisc.richtext.InlineCssTextArea;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import static cn.nnjskz.jfx.utils.CommonUtil.*;
+import static cn.nnjskz.jfx.utils.WindowUtil.*;
 import static cn.nnjskz.jfx.utils.FileUtil.*;
 import static cn.nnjskz.jfx.utils.ResourceBundleUtil.getProperty;
 import static cn.nnjskz.jfx.utils.SocketUtil.*;
@@ -38,7 +38,7 @@ public class MainController {
     @FXML
     private ComboBox<String> modeCombo;
     @FXML
-    private TextField ipField;
+    private TextField hostField;
     @FXML
     private TextField portField;
     @FXML
@@ -48,9 +48,9 @@ public class MainController {
     @FXML
     private Button disconnectBtn;
     @FXML
-    private TextArea sendArea;
+    private InlineCssTextArea sendArea;
     @FXML
-    private TextArea chatArea;
+    private InlineCssTextArea chatArea;
     @FXML
     private HBox sendHBox;
     @FXML
@@ -70,8 +70,6 @@ public class MainController {
     @FXML
     private CheckBox hexRecvCheck;
     @FXML
-    private Button clearRecvBtn;
-    @FXML
     private Button saveLogBtn;
     @FXML
     private Label statusLabel;
@@ -79,6 +77,8 @@ public class MainController {
     private Label byteCountLabel;
     @FXML
     private Label clientNumLabel;
+    @FXML
+    private Label extensionOption;
 
     private long sentBytes = 0;
     private long receivedBytes = 0;
@@ -88,7 +88,6 @@ public class MainController {
     private TcpClientService tcpClientService;
     private TcpServerService tcpServerService;
     private UdpService udpService;
-    private final String statusColor = "#019801";
 
     @FXML
     public void initialize() throws IOException {
@@ -96,28 +95,46 @@ public class MainController {
         modeCombo.getItems().addAll("TCP Client", "TCP Server", "UDP");
         modeCombo.getSelectionModel().selectFirst();
         statusLabel.setText("未连接");
-        statusLabel.setStyle("-fx-text-fill: #da1010;");
+        statusLabel.setStyle("-fx-text-fill: " + ColorConstant.STATUS_COLOR_02 + ";");
 
-        ipField.textProperty().addListener((observable, oldValue, newValue) -> validateInputs());
+        hostField.textProperty().addListener((observable, oldValue, newValue) -> validateInputs());
         portField.textProperty().addListener((observable, oldValue, newValue) -> validateInputs());
-        sendArea.textProperty().addListener((observable, oldValue, newValue) -> {
-            if ("".equals(sendArea.getText())) {
-                sendBtn.setDisable(true);
-            } else {
-                sendBtn.setDisable(!isConnected);
-            }
+
+        sendArea.textProperty().addListener((observable, oldValue, newValue) -> sendBtn.setDisable(newValue.isEmpty() || !isConnected));
+//        sendArea.plainTextChanges()
+//                .filter(change -> !change.getInserted().isEmpty())
+//                .subscribe(change -> {
+//                    sendArea.moveTo(sendArea.getLength());
+//                    sendArea.requestFollowCaret();
+//                    int start = change.getPosition();
+//                    int end = start + change.getInserted().length();
+//                    if (start <= end && end <= sendArea.getLength()) {
+//                        String textColor = ThemeManager.isDarkMode() ? "#fbfbfb" : "#1c1c1e";
+//                        sendArea.setStyle(start, end, "-fx-fill: "+ textColor +";");
+//                    }
+//                });
+        // 监听主题变更
+        ThemeManager.darkModeProperty().addListener((observable, oldValue, newValue)->{
+            String textColor = newValue ? "#fbfbfb" : "#1c1c1e";
+            Platform.runLater(() -> {
+                int len = sendArea.getLength();
+                if (len > 0) {
+                    sendArea.setStyle(0, len, "-fx-fill: "+textColor+";");
+                }
+            });
         });
+
         modeCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if ("TCP Server".equals(newValue) || "UDP".equals(newValue)) {
-                ipField.setDisable(true);
-                ipField.setText(Objects.requireNonNull(getLocalHostExactAddress()).getHostAddress());
+                hostField.setDisable(true);
+                hostField.setText(Objects.requireNonNull(getLocalHostExactAddress()).getHostAddress());
                 portField.setText(getAvailablePort().toString());
                 connectBtn.setText("打开");
                 disconnectBtn.setText("关闭");
                 connHistoryBtn.setDisable(true);
             } else {
-                ipField.setDisable(false);
-                ipField.setText("");
+                hostField.setDisable(false);
+                hostField.setText("");
                 portField.setText("");
                 connectBtn.setText("连接");
                 disconnectBtn.setText("断开");
@@ -135,59 +152,67 @@ public class MainController {
                 lastContent.deleteCharAt(len - 2);
             }
         }
-        sendArea.setText(lastContent.toString());
+        sendArea.replaceText(lastContent.toString());
     }
 
     @FXML
     private void onConnect() {
         String mode = modeCombo.getValue();
-        String ip = ipField.getText().trim();
+        String host = hostField.getText().trim();
         int port = Integer.parseInt(portField.getText().trim());
         switch (mode) {
             case "TCP Client" -> {
                 Dialog<Void> connectDialog = showLoading("正在尝试连接中...");
-                AppExecutors.getInstance().getBackgroundExecutor().execute(()->{
-                    tcpClientService = new TcpClientService(ip, port);
+                AppExecutors.getInstance().getBackgroundFixedExecutor().execute(() -> {
+                    tcpClientService = new TcpClientService(host, port);
                     Boolean success = tcpClientService.connect();
                     Platform.runLater(() -> {
                         closeLoading(connectDialog);
                         if (success) {
-                            ipField.setDisable(true);
+                            hostField.setDisable(true);
                             portField.setDisable(true);
                             modeCombo.setDisable(true);
                             connHistoryBtn.setDisable(true);
                             connectBtn.setDisable(true);
                             disconnectBtn.setDisable(false);
                             sendBtn.setDisable("".equals(sendArea.getText()));
-                            statusLabel.setText("已连接->" + ip + ":" + port);
-                            statusLabel.setStyle("-fx-text-fill: "+statusColor+";");
+                            statusLabel.setText("已连接->" + host + ":" + port);
+                            statusLabel.setStyle("-fx-text-fill: " + ColorConstant.STATUS_COLOR_01 + ";");
                             isConnected = true;
 
                             // 监听来自 tcpClientService 的消息
                             tcpClientService.setOnDisconnect(() -> Platform.runLater(this::onDisconnect));
                             tcpClientService.setReceive(bytes -> {
-                                appendReceivedData(bytes, "来自TCP服务端:" + ip + ":" + port + "<<");
+                                appendReceivedData(bytes, "<<来自TCP服务端:" + host + ":" + port);
                                 // 如果开启自动应答
                                 if (autoAnswerCheck.isSelected()) {
                                     // 默认回复"received"（后续版本更新可自定义应答模板）
                                     tcpClientService.send("received".getBytes());
-                                    appendMessage("系统消息>>自动应答", "received".getBytes(), false);
+                                    appendMessage("自动应答>>",
+                                            "received".getBytes(),
+                                            false,
+                                            ColorConstant.SEND_COLOR
+                                    );
                                 }
                             });
 
                             // 记录本次连接进入历史
-                            AppExecutors.getInstance().getBackgroundExecutor().execute(() -> {
+                            AppExecutors.getInstance().getBackgroundFixedExecutor().execute(() -> {
                                 try {
                                     StringBuilder content = readFile(getProperty.apply("conn.history.path"));
-                                    if (!content.toString().contains(ip + ":" + port)) {
+                                    if (!content.toString().contains(host + ":" + port)) {
                                         // 保存新连接
-                                        writeFile(ip+":"+port, getProperty.apply("conn.history.path"), true);
+                                        writeFile(host + ":" + port, getProperty.apply("conn.history.path"), true);
                                     }
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
                             });
-                            appendMessage("系统消息>>", "服务已连接".getBytes(), false);
+                            appendMessage("系统消息>>",
+                                    "服务已连接".getBytes(),
+                                    false,
+                                    ColorConstant.SYSTEM_MSG_COLOR
+                            );
                         } else {
                             // 弹窗提示失败
                             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -196,59 +221,80 @@ public class MainController {
                             alert.setContentText("请检查IP/域名和端口是否正确，或服务器是否可用。");
                             alert.initOwner(MainApplication.stage);
                             alert.showAndWait();
-                            appendMessage("系统消息>>", "无法连接到服务器，请检查IP和端口是否正确，或服务器是否可用".getBytes(), false);
+                            appendMessage("系统消息>>",
+                                    "无法连接到服务器，请检查IP和端口是否正确，或服务器是否可用".getBytes(),
+                                    false,
+                                    ColorConstant.SYSTEM_MSG_COLOR
+                            );
                         }
                     });
                 });
 
             }
             case "TCP Server" -> {
-                try {
-                    tcpServerService = new TcpServerService(Integer.parseInt(portField.getText().trim()), 4096);
-                    tcpServerService.openConnect();
-                    Platform.runLater(() -> {
-                        portField.setDisable(true);
-                        modeCombo.setDisable(true);
-                        connHistoryBtn.setDisable(true);
-                        connectBtn.setDisable(true);
-                        disconnectBtn.setDisable(false);
-                        sendBtn.setDisable("".equals(sendArea.getText()));
-                        statusLabel.setText("服务已启动->" + ip + ":" + port);
-                        statusLabel.setStyle("-fx-text-fill: "+statusColor+";");
-                        isConnected = true;
-                        clientNumLabel.setVisible(true);
+                Optional<Map<String, String>> res = showTcpServerExtensionOption();
+                res.ifPresent(r->{
+                    String heartbeat = r.get("heartbeat");
+                    String maxPacket = r.get("maxPacket");
+                    try {
+                        tcpServerService = new TcpServerService(Integer.parseInt(portField.getText().trim()), maxPacket,Integer.parseInt(heartbeat));
+                        tcpServerService.openConnect();
+                        Platform.runLater(() -> {
+                            portField.setDisable(true);
+                            modeCombo.setDisable(true);
+                            connHistoryBtn.setDisable(true);
+                            connectBtn.setDisable(true);
+                            disconnectBtn.setDisable(false);
+                            sendBtn.setDisable("".equals(sendArea.getText()));
+                            statusLabel.setText("服务已启动->" + host + ":" + port);
+                            statusLabel.setStyle("-fx-text-fill: " + ColorConstant.STATUS_COLOR_01 + ";");
+                            isConnected = true;
+                            clientNumLabel.setVisible(true);
+                            extensionOption.setVisible(true);
+                            extensionOption.setText("心跳(S): "+heartbeat+" | 接收包长度(B): "+maxPacket);
 
-                        // 监听来自 tcpServerService 的消息
-                        tcpServerService.setInfoCall(msg -> {
-                            Platform.runLater(() -> {
-                                appendMessage("系统消息>>", msg.getBytes(), false);
-                                // 更新底部客户端数量
-                                clientNumLabel.setText("客户端数量：" + tcpServerService.getWritersMap().size());
-                                onStopSend();
+                            // 监听来自 tcpServerService 的消息
+                            tcpServerService.setInfoCall(msg -> {
+                                Platform.runLater(() -> {
+                                    appendMessage("系统消息>>",
+                                            msg.getBytes(),
+                                            false,
+                                            ColorConstant.SYSTEM_MSG_COLOR
+                                    );
+                                    // 更新底部客户端数量
+                                    clientNumLabel.setText("客户端数量：" + tcpServerService.getWritersMap().size());
+                                    onStopSend();
+                                });
                             });
-                        });
-                        tcpServerService.setReceive(receive ->
-                                receive.forEach(((socket, bytes) -> {
-                                    AppExecutors.getInstance().getBackgroundExecutor().execute(() -> {
-                                        String host = socket.getRemoteSocketAddress().toString().replaceAll("/", "");
-                                        appendReceivedData(bytes, "来自TCP客户端:" + host + "<<");
+                            tcpServerService.setReceive(receive -> receive.forEach(((socket, bytes) ->
+                                    AppExecutors.getInstance().getBackgroundFixedExecutor().execute(() -> {
+                                        String addr = socket.getRemoteSocketAddress().toString().replaceAll("/", "");
+                                        appendReceivedData(bytes, "<<来自TCP客户端:" + addr);
                                         // 如果开启自动应答
                                         if (autoAnswerCheck.isSelected()) {
                                             // 默认回复"received"（后续版本更新可自定义应答模板）
                                             byte[] received = "received".getBytes();
                                             tcpServerService.send(received, socket);
-                                            appendMessage("系统消息>>自动应答", "received".getBytes(), false);
+                                            appendMessage("自动应答>>",
+                                                    "received".getBytes(),
+                                                    false,
+                                                    ColorConstant.SEND_COLOR
+                                            );
                                         }
-                                    });
-                                })));
-                        tcpServerService.setOnDisconnect(() -> Platform.runLater(this::onDisconnect));
-                        appendMessage("系统消息>>", "TCP服务启动成功，等待客户端连接...".getBytes(), false);
-                    });
-                } catch (IOException e) {
-                    Platform.runLater(() -> {
-                        showTip("服务端启动失败：" + e.getMessage(), "错误提示");
-                    });
-                }
+                                    }))));
+                            tcpServerService.setOnDisconnect(() -> Platform.runLater(this::onDisconnect));
+                            appendMessage("系统消息>>",
+                                    "TCP服务启动成功，等待客户端连接...".getBytes(),
+                                    false,
+                                    ColorConstant.SYSTEM_MSG_COLOR
+                            );
+                        });
+                    } catch (IOException e) {
+                        Platform.runLater(() -> {
+                            showTip("服务端启动失败：" + e.getMessage(), "错误提示");
+                        });
+                    }
+                });
             }
             case "UDP" -> {
                 try {
@@ -261,8 +307,8 @@ public class MainController {
                         connectBtn.setDisable(true);
                         disconnectBtn.setDisable(false);
                         sendBtn.setDisable("".equals(sendArea.getText()));
-                        statusLabel.setText("UDP已启动->" + ip + ":" + port);
-                        statusLabel.setStyle("-fx-text-fill: "+statusColor+";");
+                        statusLabel.setText("UDP已启动->" + host + ":" + port);
+                        statusLabel.setStyle("-fx-text-fill: " + ColorConstant.STATUS_COLOR_01 + ";");
                         isConnected = true;
                         // 为目标主机输入框加载历史输入
                         try {
@@ -276,21 +322,29 @@ public class MainController {
 
                         udpService.setReceive(receive ->
                                 receive.forEach(((socket, bytes) -> {
-                                    String host = socket.getSocketAddress().toString().replaceAll("/", "");
-                                    appendReceivedData(bytes.getBytes(), "来自UDP客户端:" + host + "<<");
+                                    String addr = socket.getSocketAddress().toString().replaceAll("/", "");
+                                    appendReceivedData(bytes.getBytes(), "<<来自UDP客户端:" + addr);
                                     // 如果开启自动应答
                                     if (autoAnswerCheck.isSelected()) {
                                         // 默认回复"received"（后续版本更新可自定义应答模板）
                                         byte[] received = "received".getBytes();
-                                        String sendRes = udpService.send(received, host.split(":")[0], Integer.parseInt(host.split(":")[1]));
-                                        if (!"".equals(sendRes)){
-                                            showTip("应答无法发送!!!"+sendRes+"，请检查IP/域名和端口是否可用", "⚠️警告消息");
+                                        String sendRes = udpService.send(received, addr.split(":")[0], Integer.parseInt(addr.split(":")[1]));
+                                        if (!"".equals(sendRes)) {
+                                            showTip("应答无法发送!!!" + sendRes + "，请检查IP/域名和端口是否可用", "⚠️警告消息");
                                             return;
                                         }
-                                        appendMessage("系统消息>>自动应答", "received".getBytes(), false);
+                                        appendMessage("自动应答>>",
+                                                "received".getBytes(),
+                                                false,
+                                                ColorConstant.SEND_COLOR
+                                        );
                                     }
                                 })));
-                        appendMessage("系统消息>>", "UDP启动成功!".getBytes(), false);
+                        appendMessage("系统消息>>",
+                                "UDP启动成功!".getBytes(),
+                                false,
+                                ColorConstant.SYSTEM_MSG_COLOR
+                        );
                     });
 
                 } catch (IOException e) {
@@ -314,7 +368,7 @@ public class MainController {
         // 断开连接并清理线程
         if (isConnected) {
             Platform.runLater(() -> {
-                ipField.setDisable(false);
+                hostField.setDisable(false);
                 portField.setDisable(false);
                 modeCombo.setDisable(false);
                 connectBtn.setDisable(false);
@@ -328,11 +382,21 @@ public class MainController {
                 String selectedItem = modeCombo.getSelectionModel().getSelectedItem();
                 if ("TCP Server".equals(selectedItem)) {
                     tcpServerService.close();
-                    appendMessage("系统消息>>", "服务已关闭".getBytes(), false);
+                    appendMessage("系统消息>>",
+                            "服务已关闭".getBytes(),
+                            false,
+                            ColorConstant.SYSTEM_MSG_COLOR
+                    );
                     clientNumLabel.setVisible(false);
+                    extensionOption.setVisible(false);
+                    extensionOption.setText("");
                 } else if ("UDP".equals(selectedItem)) {
                     udpService.close();
-                    appendMessage("系统消息>>", "UDP已关闭".getBytes(), false);
+                    appendMessage("系统消息>>",
+                            "UDP已关闭".getBytes(),
+                            false,
+                            ColorConstant.SYSTEM_MSG_COLOR
+                    );
                     // 清除udp模式下渲染的 目标主机输入框的界面
                     for (Node node : sendHBox.getChildren()) {
                         if (node instanceof HBox) {
@@ -372,13 +436,13 @@ public class MainController {
                     tcpServerService.send(payload);
                 }
                 case "UDP" -> {
-                    AtomicReference<String> ip = new AtomicReference<>();
+                    AtomicReference<String> host = new AtomicReference<>();
                     AtomicReference<String> port = new AtomicReference<>();
-                    Optional<Node> targetIpField = findChildById(sendHBox, "targetIpField");
+                    Optional<Node> targetHostField = findChildById(sendHBox, "targetHostField");
                     Optional<Node> targetPortField = findChildById(sendHBox, "targetPortField");
-                    targetIpField.ifPresent(node -> {
+                    targetHostField.ifPresent(node -> {
                         if (node instanceof ComboBox<?> cb) {
-                            ip.set((String) cb.getValue());
+                            host.set((String) cb.getValue());
                         }
                     });
                     targetPortField.ifPresent(node -> {
@@ -386,7 +450,7 @@ public class MainController {
                             port.set((String) cb.getValue());
                         }
                     });
-                    if (Objects.isNull(ip.get()) || Objects.isNull(port.get())) {
+                    if (Objects.isNull(host.get()) || Objects.isNull(port.get())) {
                         if (autoSend) {
                             onStopSend();
                         }
@@ -394,17 +458,18 @@ public class MainController {
                         return;
                     }
                     appendSendingData(payload);
-                    String sendRes = udpService.send(payload, ip.get(), Integer.parseInt(port.get()));
-                    if (!"".equals(sendRes)){
-                        showTip("消息已发出，但对方也许无法收到!!!原因："+sendRes+"，请检查IP/域名和端口是否可用", "⚠️警告消息");
+                    String sendRes = udpService.send(payload, host.get(), Integer.parseInt(port.get()));
+                    if (!"".equals(sendRes)) {
+                        showTip("消息已发出，但对方也许无法收到!!!原因：" + sendRes + "，请检查IP/域名和端口是否可用", "⚠️警告消息");
                         return;
                     }
+
                     // 记录本次目标主机进入历史
-                    AppExecutors.getInstance().getBackgroundExecutor().execute(() -> {
+                    AppExecutors.getInstance().getBackgroundFixedExecutor().execute(() -> {
                         try {
-                            StringBuilder content = readFile(getProperty.apply("target.host.history.path"));
-                            if (!content.toString().contains(ip + ":" + port)) {
-                                writeFile(ip+":"+port, getProperty.apply("target.host.history.path"), true);
+                            String content = readFile(getProperty.apply("target.host.history.path")).toString();
+                            if (!content.contains(host + ":" + port)) {
+                                writeFile(host + ":" + port, getProperty.apply("target.host.history.path"), true);
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -434,7 +499,7 @@ public class MainController {
             task.run();
         }
         // 保存最后一次编辑
-        AppExecutors.getInstance().getBackgroundExecutor().execute(() -> {
+        AppExecutors.getInstance().getBackgroundFixedExecutor().execute(() -> {
             try {
                 writeFile(data, getProperty.apply("last.send.path"), false);
             } catch (IOException e) {
@@ -463,18 +528,16 @@ public class MainController {
     @FXML
     private void onClearSend() {
         sendArea.clear();
+        sendArea.replaceText("");
     }
 
     @FXML
-    private void onClearRecv() {
-        boolean dialog = showConfirmationDialog("提示消息", "你确认要清空以上数据记录志吗?");
-        if (dialog) {
-            chatArea.clear();
-            receivedBytes = 0;
-            updateByteCount();
-            clearRecvBtn.setDisable(true);
-            saveLogBtn.setDisable(true);
-        }
+    private void onClearReceive() {
+        chatArea.clear();
+        chatArea.replaceText("");
+        receivedBytes = 0;
+        updateByteCount();
+        saveLogBtn.setDisable(true);
     }
 
     @FXML
@@ -482,7 +545,7 @@ public class MainController {
         // 实现保存接收日志到文件
         boolean dialog = showConfirmationDialog("提示消息", "你确认要将以上数据记录为日志吗?");
         if (dialog) {
-            String[] hosts = ipField.getText().split("\\.");
+            String[] hosts = hostField.getText().split("\\.");
             StringBuilder host = new StringBuilder();
             for (String h : hosts) {
                 host.append(h).append("_");
@@ -510,7 +573,7 @@ public class MainController {
         FXMLLoader fxmlLoader = showWindow(getProperty.apply("history.conn.view.path"), "连接历史", false, HistoryConnController.class);
         HistoryConnController controller = fxmlLoader.getController();
         controller.setOnSelected(item -> {
-            ipField.setText(item.getIp());
+            hostField.setText(item.getHost());
             portField.setText(String.valueOf(item.getPort()));
             Stage stage = (Stage) ((Parent) fxmlLoader.getRoot()).getScene().getWindow();
             stage.close();
@@ -523,20 +586,20 @@ public class MainController {
     }
 
     /**
-     * 验证IP&端口输入框
+     * 验证IP、域名和端口输入框
      */
     private void validateInputs() {
-        String ipText = ipField.getText();
+        String hostText = hostField.getText();
         String portText = portField.getText();
 
-        // 判断IP的完整性与正确性
-        boolean ipValid = false;
-        if (ipText != null && !ipText.isBlank()) {
-            String ipv4Pattern = "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(\\.|$)){4}$";
-            ipValid = ipText.matches(ipv4Pattern);
+        String ipv4Pattern = "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)(\\.|$)){4}$";
+        String domainPattern = "^([a-zA-Z0-9][-a-zA-Z0-9]{0,62}\\.)+[a-zA-Z]{2,}$";
+
+        boolean hostValid = false;
+        if (hostText != null && !hostText.isBlank()) {
+            hostValid = hostText.matches(ipv4Pattern) || hostText.matches(domainPattern);
         }
 
-        // 判断端口的完整性与正确性
         boolean portValid = false;
         try {
             int port = Integer.parseInt(portText);
@@ -544,7 +607,7 @@ public class MainController {
         } catch (NumberFormatException ignored) {
         }
 
-        boolean valid = ipValid && portValid;
+        boolean valid = hostValid && portValid;
         connectBtn.setDisable(!valid);
     }
 
@@ -555,9 +618,8 @@ public class MainController {
      * @param labelPrefix 标头
      */
     public void appendReceivedData(byte[] data, String labelPrefix) {
-        appendMessage(labelPrefix, data, hexRecvCheck.isSelected());
+        appendMessage(labelPrefix, data, hexRecvCheck.isSelected(),ColorConstant.RECEIVE_COLOR);
         receivedBytes += data.length;
-        clearRecvBtn.setDisable(false);
         saveLogBtn.setDisable(false);
     }
 
@@ -567,9 +629,8 @@ public class MainController {
      * @param data 数据
      */
     public void appendSendingData(byte[] data) {
-        appendMessage("你>>", data, hexSendCheck.isSelected());
+        appendMessage("你>>", data, hexSendCheck.isSelected(),ColorConstant.SEND_COLOR);
         sentBytes += data.length;
-        clearRecvBtn.setDisable(false);
         saveLogBtn.setDisable(false);
     }
 
@@ -579,16 +640,21 @@ public class MainController {
      * @param labelPrefix 标头
      * @param data        数据
      * @param isHex       是否十六进制
+     * @param hexColor    十六进制颜色值
      */
-    private void appendMessage(String labelPrefix, byte[] data, boolean isHex) {
+    private void appendMessage(String labelPrefix,
+                               byte[] data,
+                               boolean isHex,
+                               String hexColor) {
         Platform.runLater(() -> {
             String displayText = isHex ? formatBytesToHex(data) : new String(data, StandardCharsets.UTF_8);
             String format = isHex ? "【HEX】" : "";
             String head = "[" + DateUtil.formatDate2String(new Date(), DateUtil.LONG_PATTERN) +
-                    "] " + labelPrefix + " /" + data.length + "字节" + format + ":\n";
-            chatArea.appendText(head);
-            chatArea.appendText(displayText);
-            chatArea.appendText("\n\n");
+                    "] " + labelPrefix + "|" + data.length + "字节" + format + ":\n";
+            chatArea.append(head, "-fx-fill:" + ColorConstant.HEAD_COLOR + ";");
+            chatArea.append(displayText + "\r\n\n", "-fx-fill:" + hexColor + ";-fx-padding:10px");
+            chatArea.moveTo(chatArea.getLength());
+            chatArea.requestFollowCaret();
             updateByteCount();
         });
     }

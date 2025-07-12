@@ -1,0 +1,10 @@
+/* 接收面板富文本 */
+.receive-inline-text-area,.sending-inline-text-area {
+    -fx-border-color: #464646;
+    -fx-border-width: 1px;
+    -fx-padding: 6px;
+    -fx-font-family: monospace;
+    -fx-border-radius: 15;
+    -fx-background-color: #19191e;
+}
+.sending-inline-text-area .caret { -fx-stroke: #fbfbfb; }

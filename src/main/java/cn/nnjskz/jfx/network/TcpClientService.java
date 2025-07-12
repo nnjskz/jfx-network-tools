@@ -67,6 +67,8 @@ public class TcpClientService {
                e.printStackTrace();
            }
         }
+        receive = null;
+        onDisconnect = null;
     }
 
     public void send(byte[] bytes) {

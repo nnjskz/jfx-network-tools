@@ -8,17 +8,20 @@
 package cn.nnjskz.jfx.controller;
 
 import cn.nnjskz.jfx.model.HistoryLogs;
-import cn.nnjskz.jfx.utils.FileUtil;
+import cn.nnjskz.jfx.utils.DateUtil;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static cn.nnjskz.jfx.utils.CommonUtil.showConfirmationDialog;
-import static cn.nnjskz.jfx.utils.CommonUtil.showWindow;
+import static cn.nnjskz.jfx.utils.WindowUtil.showConfirmationDialog;
+import static cn.nnjskz.jfx.utils.WindowUtil.showWindow;
 import static cn.nnjskz.jfx.utils.FileUtil.*;
 import static cn.nnjskz.jfx.utils.ResourceBundleUtil.getProperty;
 
@@ -41,6 +44,8 @@ public class HistoryLogsController {
     @FXML
     private TableColumn<HistoryLogs,Long> logSize;
     @FXML
+    private TableColumn<HistoryLogs,String> logTime;
+    @FXML
     private TableColumn<HistoryLogs,Void> action;
 
     @FXML
@@ -50,13 +55,15 @@ public class HistoryLogsController {
         List<HistoryLogs> historyLogsList = new ArrayList<>();
         AtomicReference<Integer> i = new AtomicReference<>(1);
         logMap.forEach((k,v)->{
-            historyLogsList.add(new HistoryLogs(i.get(),k, v));
+            String timestamp = k.substring(k.lastIndexOf('_') + 1);
+            historyLogsList.add(new HistoryLogs(i.get(),k, v, DateUtil.formatDate2String(Long.parseLong(timestamp.split("\\.")[0]),DateUtil.COMMON_PATTERN)));
             i.getAndSet(i.get() + 1);
         });
 
         logSeq.setCellValueFactory(new PropertyValueFactory<>("logSeq"));
         logName.setCellValueFactory(new PropertyValueFactory<>("logName"));
         logSize.setCellValueFactory(new PropertyValueFactory<>("logSize"));
+        logTime.setCellValueFactory(new PropertyValueFactory<>("logTime"));
         historyLogsTable.setItems(FXCollections.observableList(historyLogsList));
 
         action.setCellFactory(col -> new TableCell<>(){
@@ -98,6 +105,10 @@ public class HistoryLogsController {
                         FXMLLoader fxmlLoader = showWindow(getProperty.apply("log.detail.view.path"), "查看日志",true, LogController.class);
                         LogController controller = fxmlLoader.getController();
                         controller.setContent(content);
+                        // 监听关闭Stage时清空logContent
+                        Parent root = fxmlLoader.getRoot();
+                        Stage stage = (Stage)root.getScene().getWindow();
+                        stage.setOnCloseRequest(e -> controller.onClose());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

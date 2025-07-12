@@ -7,33 +7,43 @@
  */
 package cn.nnjskz.jfx.network;
 
+import cn.nnjskz.jfx.utils.AppExecutors;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class TcpServerService {
     private final Integer port;
     private ServerSocket serverSocket;
-    private final Map<Socket,OutputStream> writersMap = new ConcurrentHashMap<>();
-    private ReadThread readThread;
-    private Consumer<Map<Socket,byte[]>> receive;
+    private final Map<Socket, OutputStream> writersMap = new ConcurrentHashMap<>();
+//    private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private Consumer<Map<Socket, byte[]>> receive;
     private Consumer<String> infoCall;
     private Runnable onDisconnect;
-    private final Integer bufSize;
+    private final String bufSize;
+    private final Integer heartbeat;
 
-    public TcpServerService(Integer port,Integer bufSize) {
+    public TcpServerService(Integer port, String bufSize, Integer heartbeat) {
         this.port = port;
         this.bufSize = bufSize;
+        this.heartbeat = heartbeat;
     }
 
     public void setOnDisconnect(Runnable onDisconnect) {
         this.onDisconnect = onDisconnect;
     }
-    public void setReceive(Consumer<Map<Socket,byte[]>> receive) {
+
+    public void setReceive(Consumer<Map<Socket, byte[]>> receive) {
         this.receive = receive;
     }
 
@@ -45,29 +55,25 @@ public class TcpServerService {
         return writersMap;
     }
 
+    // 打开连接
     public void openConnect() throws IOException {
         serverSocket = new ServerSocket(port);
         new Thread(() -> {
             try {
                 while (!serverSocket.isClosed()) {
                     Socket socket = serverSocket.accept();
-                    writersMap.put(socket,socket.getOutputStream());
-                    this.readThread = new ReadThread(this,socket);
-                    this.readThread.start();
-                    String notify = "客户端->" + socket.getRemoteSocketAddress() + "已连接";
+                    writersMap.put(socket, socket.getOutputStream());
+                    ReadThread readThread = new ReadThread(this, socket);
+                    AppExecutors.getInstance().getBackgroundCachedExecutor().submit(readThread);
                     if (infoCall != null) {
-                        infoCall.accept(notify);
+                        infoCall.accept("客户端->" + socket.getRemoteSocketAddress() + "已连接");
                     }
                 }
             } catch (IOException ignored) {}
         }).start();
     }
 
-    /**
-     * 消息发送（广播）
-     * @param message 消息数据
-     */
-    public void send(byte[] message){
+    public void send(byte[] message) {
         Iterator<Map.Entry<Socket, OutputStream>> iterator = writersMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<Socket, OutputStream> entry = iterator.next();
@@ -75,12 +81,9 @@ public class TcpServerService {
                 entry.getValue().write(message);
                 entry.getValue().flush();
             } catch (IOException e) {
-                // 移除已断开连接
                 try {
                     entry.getKey().close();
-                    entry.getValue().close();
-                } catch (IOException ignored) {
-                }
+                } catch (IOException ignored) {}
                 iterator.remove();
                 if (infoCall != null) {
                     infoCall.accept("客户端->" + entry.getKey().getRemoteSocketAddress() + " 已断开（发送失败）");
@@ -89,14 +92,9 @@ public class TcpServerService {
         }
     }
 
-    /**
-     * 消息发送
-     * @param socket socket实例
-     * @param message 消息数据
-     */
-    public void send(byte[] message, Socket socket){
+    public void send(byte[] message, Socket socket) {
         OutputStream out = writersMap.get(socket);
-        if(out != null){
+        if (out != null) {
             try {
                 out.write(message);
                 out.flush();
@@ -108,20 +106,15 @@ public class TcpServerService {
 
     public void close() {
         try {
-            if (readThread != null && readThread.isAlive()) {
-                readThread.interrupt();
+//            threadPool.shutdownNow();
+            for (Map.Entry<Socket, OutputStream> entry : writersMap.entrySet()) {
+                try {
+                    entry.getKey().shutdownInput();
+                    entry.getKey().close();
+                    entry.getValue().close();
+                } catch (IOException ignored) {}
             }
-            if (!writersMap.isEmpty()) {
-                writersMap.forEach((k,v)->{
-                    try {
-                        k.close();
-                        v.close();
-                    } catch (IOException e) {
-                        throw new RuntimeException("关闭连接失败: " + e.getMessage(), e);
-                    }
-                });
-                writersMap.clear();
-            }
+            writersMap.clear();
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
@@ -133,42 +126,42 @@ public class TcpServerService {
         }
     }
 
-    private static class ReadThread extends Thread {
-        private final TcpServerService server;
-        private final Socket socket;
-        private final Map<Socket,byte[]> receiveMap = new ConcurrentHashMap<>();
-
-        public ReadThread(TcpServerService server, Socket socket) {
-            this.server = server;
-            this.socket = socket;
-        }
-
+    private record ReadThread(TcpServerService server, Socket socket) implements Runnable {
         @Override
-        public void run() {
-            String notify = "";
-            try (InputStream in = socket.getInputStream()) {
-                byte[] buffer = new byte[server.bufSize];
-                int len;
-                while ((len = in.read(buffer)) != -1) {
-                    receiveMap.clear();
-                    byte[] actual = new byte[len];
-                    System.arraycopy(buffer, 0, actual, 0, len);
-                    receiveMap.put(socket,actual);
-                    server.receive.accept(receiveMap);
+            public void run() {
+                String notify = "";
+                try (InputStream in = socket.getInputStream()) {
+                    // 设置心跳超时
+                    socket.setSoTimeout(server.heartbeat * 1000);
+                    // 设置最大接收包长度
+                    int readSize = "auto".equals(server.bufSize)?Math.min(32 * 1024, socket.getReceiveBufferSize()):Integer.parseInt(server.bufSize);
+                    byte[] buffer = new byte[readSize];
+                    int len;
+                    while ((len = in.read(buffer)) != -1) {
+                        byte[] actual = Arrays.copyOf(buffer, len);
+                        Map<Socket, byte[]> receiveMap = new HashMap<>();
+                        receiveMap.put(socket, actual);
+                        if (server.receive != null) {
+                            server.receive.accept(receiveMap);
+                        }
+                    }
+                    notify = "客户端->" + socket.getRemoteSocketAddress() + "已断开";
+                } catch (SocketTimeoutException timeout) {
+                    notify = "客户端->" + socket.getRemoteSocketAddress() + "超时断开";
+                } catch (IOException e) {
+                    if (server.onDisconnect != null) {
+                        server.onDisconnect.run();
+                    }
+                } finally {
+                    server.writersMap.remove(socket);
+                    if (server.infoCall != null) {
+                        server.infoCall.accept(notify);
+                    }
+                    try {
+                        socket.close();
+                    } catch (IOException ignored) {
+                    }
                 }
-                notify = "客户端->" + socket.getRemoteSocketAddress() + "已断开";
-            } catch (IOException e) {
-                if (server.onDisconnect != null){
-                    server.onDisconnect.run();
-                }
-            }
-
-            server.writersMap.remove(socket);
-
-            if (server.infoCall != null) {
-                server.infoCall.accept(notify);
             }
         }
-    }
 }
-

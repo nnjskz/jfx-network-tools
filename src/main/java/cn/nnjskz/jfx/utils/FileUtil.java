@@ -19,7 +19,7 @@ import static cn.nnjskz.jfx.utils.ResourceBundleUtil.getProperty;
 public class FileUtil {
     public final static String currentDir = getWritableAppDataDir();
 
-    private static String getWritableAppDataDir() {
+    public static String getWritableAppDataDir() {
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             return Paths.get(System.getenv("LOCALAPPDATA"), "JFXNetworkTools").toString();
