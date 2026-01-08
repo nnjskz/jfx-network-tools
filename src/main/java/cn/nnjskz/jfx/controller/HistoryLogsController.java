@@ -38,15 +38,15 @@ public class HistoryLogsController {
     @FXML
     private TableView<HistoryLogs> historyLogsTable;
     @FXML
-    private TableColumn<HistoryLogs,Integer> logSeq;
+    private TableColumn<HistoryLogs, Integer> logSeq;
     @FXML
-    private TableColumn<HistoryLogs,String> logName;
+    private TableColumn<HistoryLogs, String> logName;
     @FXML
-    private TableColumn<HistoryLogs,Long> logSize;
+    private TableColumn<HistoryLogs, Long> logSize;
     @FXML
-    private TableColumn<HistoryLogs,String> logTime;
+    private TableColumn<HistoryLogs, String> logTime;
     @FXML
-    private TableColumn<HistoryLogs,Void> action;
+    private TableColumn<HistoryLogs, Void> action;
 
     @FXML
     private void initialize() throws IOException {
@@ -54,9 +54,9 @@ public class HistoryLogsController {
         Map<String, Long> logMap = getHistoryLogList();
         List<HistoryLogs> historyLogsList = new ArrayList<>();
         AtomicReference<Integer> i = new AtomicReference<>(1);
-        logMap.forEach((k,v)->{
+        logMap.forEach((k, v) -> {
             String timestamp = k.substring(k.lastIndexOf('_') + 1);
-            historyLogsList.add(new HistoryLogs(i.get(),k, v, DateUtil.formatDate2String(Long.parseLong(timestamp.split("\\.")[0]),DateUtil.COMMON_PATTERN)));
+            historyLogsList.add(new HistoryLogs(i.get(), k, v, DateUtil.formatDate2String(Long.parseLong(timestamp.split("\\.")[0]), DateUtil.COMMON_PATTERN)));
             i.getAndSet(i.get() + 1);
         });
 
@@ -66,11 +66,12 @@ public class HistoryLogsController {
         logTime.setCellValueFactory(new PropertyValueFactory<>("logTime"));
         historyLogsTable.setItems(FXCollections.observableList(historyLogsList));
 
-        action.setCellFactory(col -> new TableCell<>(){
+        action.setCellFactory(col -> new TableCell<>() {
             private final Button openBut = new Button("打开文件所在位置");
             private final Button selectBut = new Button("预览");
             private final Button deleteBut = new Button("删除");
             private final HBox hbox = new HBox(10, openBut, selectBut, deleteBut);
+
             {
                 openBut.setOnAction(event -> {
                     HistoryLogs item = getTableView().getItems().get(getIndex());
@@ -102,12 +103,12 @@ public class HistoryLogsController {
                     HistoryLogs item = getTableView().getItems().get(getIndex());
                     try {
                         StringBuilder content = readFile(getProperty.apply("logs.path") + item.getLogName());
-                        FXMLLoader fxmlLoader = showWindow(getProperty.apply("log.detail.view.path"), "查看日志",true, LogController.class);
+                        FXMLLoader fxmlLoader = showWindow(getProperty.apply("log.detail.view.path"), "查看日志", true, LogController.class);
                         LogController controller = fxmlLoader.getController();
                         controller.setContent(content);
                         // 监听关闭Stage时清空logContent
                         Parent root = fxmlLoader.getRoot();
-                        Stage stage = (Stage)root.getScene().getWindow();
+                        Stage stage = (Stage) root.getScene().getWindow();
                         stage.setOnCloseRequest(e -> controller.onClose());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -115,12 +116,12 @@ public class HistoryLogsController {
                 });
                 deleteBut.setOnAction(event -> {
                     HistoryLogs item = getTableView().getItems().get(getIndex());
-                    boolean dialog = showConfirmationDialog("提示消息", "你确认要删除【"+item.getLogName()+"】吗?");
+                    boolean dialog = showConfirmationDialog("提示消息", "你确认要删除【" + item.getLogName() + "】吗?");
                     if (dialog) {
                         try {
                             Boolean deleted = deleteFile(getProperty.apply("logs.path") + item.getLogName());
                             if (deleted) {
-                                showConfirmationDialog("成功消息","删除成功!");
+                                showConfirmationDialog("成功消息", "删除成功!");
                                 getTableView().getItems().remove(getIndex());
                             }
                         } catch (IOException e) {
@@ -129,11 +130,12 @@ public class HistoryLogsController {
                     }
                 });
             }
+
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty) {
                     setGraphic(null);
-                }else {
+                } else {
                     hbox.setAlignment(Pos.CENTER);
                     setGraphic(hbox);
                 }

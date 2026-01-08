@@ -72,6 +72,8 @@ public class MainController {
     @FXML
     private Button saveLogBtn;
     @FXML
+    private Button historyLogBtn;
+    @FXML
     private Label statusLabel;
     @FXML
     private Label byteCountLabel;
